@@ -1,12 +1,255 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spangolita - Restorane Madride</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spangolita — Restorane Madride</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Calibri, 'Segoe UI', sans-serif; background: #F5F0EB; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+  .card { background: #fff; border-radius: 16px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(44,24,16,0.12); overflow: hidden; }
+  .scene-bar { background: #2C1810; padding: 14px 20px; color: #fff; font-size: 14px; letter-spacing: 1px; }
+  .content { padding: 20px 24px 24px; }
+  .waiter-bubble { background: #F9F6F2; border-radius: 12px; padding: 14px 18px; border-left: 4px solid #6B7B3A; margin-bottom: 12px; }
+  .waiter-label { font-size: 11px; color: #6B7B3A; font-weight: bold; margin-bottom: 4px; }
+  .waiter-text { font-size: 17px; color: #2C1810; font-family: Georgia, serif; font-style: italic; }
+  .instruction { color: #64748B; font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
+  .question { color: #2C1810; font-size: 15px; font-weight: bold; margin-bottom: 16px; }
+  .option-btn { display: block; width: 100%; text-align: left; background: #fff; border: 2px solid #E8E2DA; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; cursor: pointer; font-size: 15px; color: #2C1810; font-family: Calibri, sans-serif; transition: all 0.2s; line-height: 1.4; }
+  .option-btn:hover:not(.locked) { border-color: #4A6FA5; background: #F0F4FA; }
+  .option-btn .es { color: #B85042; font-weight: bold; }
+  .option-btn.correct { background: #E8F5E9; border-color: #6B7B3A; }
+  .option-btn.wrong { background: #FFEBEE; border-color: #B85042; }
+  .option-btn.reveal-correct { background: #E8F5E9; border-color: #6B7B3A; }
+  .feedback { border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px; color: #2C1810; line-height: 1.4; }
+  .feedback.good { background: #E8F5E9; border-left: 4px solid #6B7B3A; }
+  .feedback.hint { background: #FFF3E0; border-left: 4px solid #C89B3C; }
+  .next-btn { background: #B85042; color: #fff; border: none; border-radius: 10px; padding: 12px 0; width: 100%; font-size: 15px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .next-btn:hover { background: #8B2252; }
+  .progress-bar { max-width: 520px; width: 100%; margin-bottom: 16px; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: #64748B; margin-bottom: 4px; }
+  .progress-track { height: 6px; background: #F9F6F2; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #B85042, #C89B3C); border-radius: 3px; transition: width 0.4s; }
+  .footer { margin-top: 12px; color: #64748B; font-size: 11px; }
+  .welcome-card, .result-card { text-align: center; padding: 40px 32px; }
+  .welcome-card h1 { font-family: Georgia, serif; color: #2C1810; font-size: 28px; margin-bottom: 4px; }
+  .welcome-card .sub { color: #B85042; font-size: 14px; letter-spacing: 3px; margin-bottom: 20px; }
+  .welcome-card .line { width: 60px; height: 3px; background: #B85042; margin: 0 auto 20px; border-radius: 2px; }
+  .welcome-card h2 { font-family: Georgia, serif; color: #2C1810; font-size: 22px; margin-bottom: 12px; }
+  .welcome-card p { color: #64748B; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  .start-btn { background: #B85042; color: #fff; border: none; border-radius: 10px; padding: 14px 40px; font-size: 17px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .start-btn:hover { background: #8B2252; }
+  .result-card .stars { font-size: 48px; margin-bottom: 12px; }
+  .result-card h2 { color: #2C1810; font-size: 26px; margin-bottom: 8px; font-family: Georgia, serif; }
+  .result-card .line { width: 60px; height: 3px; background: #C89B3C; margin: 0 auto 20px; border-radius: 2px; }
+  .result-card .score-big { font-size: 64px; font-weight: bold; color: #B85042; margin-bottom: 8px; }
+  .result-card .pct { color: #64748B; font-size: 16px; margin-bottom: 8px; }
+  .result-card .msg { background: #F9F6F2; border-radius: 10px; padding: 16px; margin: 16px 0 24px; color: #2C1810; font-size: 15px; line-height: 1.5; }
+  .restart-btn { background: #6B7B3A; color: #fff; border: none; border-radius: 10px; padding: 12px 36px; font-size: 16px; font-family: Georgia, serif; cursor: pointer; transition: background 0.2s; }
+  .restart-btn:hover { background: #4A6FA5; }
+  .fade-in { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="footer" id="footer">spangolita.com • 3 pamoka</div>
+
+<script>
+const STEPS = [
+  {
+    id: "welcome",
+    scene: "🇪🇸 Madride, šiltas rytas...",
+    waiter: "¡Buenos días! ¿Cómo estás hoy?",
+    instruction: "Jūs ką tik įėjote į restoraną Madride. Padavėjas pasitiko ir klausia kaip jums sekasi.",
+    question: "Kaip atsakote padavėjui ispaniškai?",
+    options: [
+      { text: "¡Buenos días! Estoy bien, gracias.", correct: true, feedback: "¡Perfecto! Mandagus ir teisingas atsakymas!" },
+      { text: "Buenas noches, gracias.", correct: false, feedback: "Hmm... dabar rytas, ne naktis! Turėtų būti 'Buenos días'." },
+      { text: "Hola, estoy malo.", correct: false, feedback: "'Malo' reiškia blogas. Apie savijautą sakome 'mal' arba tiesiog 'bien'!" },
+    ],
+  },
+  {
+    id: "drink",
+    scene: "☕ Padavėjas paduoda meniu...",
+    waiter: "¿Quieres beber algo?",
+    instruction: "Padavėjas klausia ar norite ko nors gerti. Ką atsakote?",
+    question: "Jūs norite kavos. Kaip pasakysite?",
+    options: [
+      { text: "Necesito un café, por favor.", correct: true, feedback: "¡Muy bien! Kava jau pakeliui!" },
+      { text: "Quiero comer un café.", correct: false, feedback: "Atsargiai! Kavos geriame (beber), ne valgome (comer)!" },
+      { text: "No quiero agua.", correct: false, feedback: "Tai neiginys apie vandenį, bet padavėjas klausė ką norite gerti!" },
+    ],
+  },
+  {
+    id: "size",
+    scene: "☕ Padavėjas klausia daugiau...",
+    waiter: "¡Perfecto! ¿Grande o pequeño?",
+    instruction: "Padavėjas nori žinoti kokio dydžio kavą norite.",
+    question: "Norite didelę kavą. Ką sakote?",
+    options: [
+      { text: "Grande, por favor.", correct: true, feedback: "¡Genial! Didelė kava — geras pasirinkimas!" },
+      { text: "Pequeño, gracias.", correct: false, feedback: "Pequeño = mažas. Bet jūs norėjote didelę!" },
+      { text: "Bueno café.", correct: false, feedback: "Tai reiškia 'gera kava', bet padavėjas klausė apie dydį!" },
+    ],
+  },
+  {
+    id: "food",
+    scene: "🍳 Padavėjas rodo pusryčių meniu...",
+    waiter: "¿Quieres comer? Tenemos un desayuno muy bueno.",
+    instruction: "Padavėjas siūlo pusryčius. Jūs alkanas/a!",
+    question: "Norite valgyti pusryčius. Kaip pasakysite?",
+    options: [
+      { text: "Sí, quiero comer. Mi desayuno, por favor.", correct: true, feedback: "¡Perfecto! Pusryčiai jau ruošiami!" },
+      { text: "No quiero comer ahora.", correct: false, feedback: "Bet jūs alkanas! 'No quiero comer' reiškia nenoriu valgyti." },
+      { text: "Necesito beber comida.", correct: false, feedback: "Oi! Maisto valgome (comer), ne geriame (beber)!" },
+    ],
+  },
+  {
+    id: "opinion",
+    scene: "😋 Maistas atkeliauja...",
+    waiter: "¡Aquí está! ¿Es bueno?",
+    instruction: "Padavėjas atnešė maistą ir klausia ar skanu!",
+    question: "Maistas puikus! Ką sakote?",
+    options: [
+      { text: "¡Sí, es muy bueno! Me gusta mucho.", correct: true, feedback: "¡Increíble! Padavėjas labai patenkintas!" },
+      { text: "Es malo, gracias.", correct: false, feedback: "Malo = blogai. Bet maistas buvo puikus!" },
+      { text: "Mi casa es grande.", correct: false, feedback: "Ha! Tai tiesa, bet padavėjas klausė apie maistą, ne jūsų namus!" },
+    ],
+  },
+  {
+    id: "goodbye",
+    scene: "👋 Laikas atsisveikinti...",
+    waiter: "¡Gracias! ¿Estás contento?",
+    instruction: "Padavėjas dėkoja ir klausia ar esate patenkintas/a.",
+    question: "Esate labai patenkintas/a. Kaip atsisveikinate?",
+    options: [
+      { text: "¡Sí, estoy muy contento! ¡Hasta pronto!", correct: true, feedback: "¡Perfecto! Padavėjas kviečia sugrįžti!" },
+      { text: "Estoy enfermo. Hasta luego.", correct: false, feedback: "Enfermo = sergantis. Tikimės, kad ne nuo maisto! 😄" },
+      { text: "No estoy bien. Adiós.", correct: false, feedback: "Bet jums viskas patiko! 'No estoy bien' reiškia man negerai." },
+    ],
+  },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+let step = -1, score = 0, selected = null, showFeedback = false, shuffled = [];
+const app = document.getElementById("app");
+
+function render() {
+  if (step === -1) return renderWelcome();
+  if (step >= STEPS.length) return renderResult();
+  renderGame();
+}
+
+function renderWelcome() {
+  app.innerHTML = `
+    <div class="card fade-in">
+      <div class="welcome-card">
+        <div style="font-size:48px;margin-bottom:8px">🇪🇸</div>
+        <h1>SPANGOLITA</h1>
+        <div class="sub">I N T E R A K T Y V U S &nbsp; Ž A I D I M A S</div>
+        <div class="line"></div>
+        <h2>Restorane Madride</h2>
+        <p>Jūs ką tik atėjote į restoraną Madride! Padavėjas kalba ispaniškai, ir jūs turite užsakyti maistą ir gėrimus naudodami tik tai, ką jau išmokote.<br><br><strong>6 situacijos</strong> — kiekviena su 3 atsakymų variantais.<br>Pasirinkite teisingą frazę ispaniškai!</p>
+        <button class="start-btn" onclick="startGame()">¡Vamos! Pradėkime!</button>
+      </div>
+    </div>`;
+}
+
+function renderResult() {
+  const pct = Math.round((score / STEPS.length) * 100);
+  const stars = score >= 5 ? "⭐⭐⭐" : score >= 3 ? "⭐⭐" : "⭐";
+  const msg = score === 6 ? "¡INCREÍBLE! Tobulas rezultatas! Jūs tikras ispanas!"
+    : score >= 4 ? "¡Muy bien! Puikus rezultatas! Dar šiek tiek praktikos ir būsite tobuli!"
+    : score >= 2 ? "¡Bien! Gera pradžia! Pakartokite L3 žodyną ir bandykite dar kartą."
+    : "¡Ánimo! Nesijaudinkite — pakartokite žodyną ir grįžkite!";
+  app.innerHTML = `
+    <div class="card fade-in">
+      <div class="result-card">
+        <div class="stars">${stars}</div>
+        <h2>Jūsų rezultatas</h2>
+        <div class="line"></div>
+        <div class="score-big">${score}/${STEPS.length}</div>
+        <div class="pct">${pct}% teisingai</div>
+        <div class="msg">${msg}</div>
+        <button class="restart-btn" onclick="restart()">Žaisti dar kartą</button>
+      </div>
+    </div>`;
+}
+
+function renderGame() {
+  const c = STEPS[step];
+  const pct = ((step + 1) / STEPS.length) * 100;
+  let optHtml = "";
+  shuffled.forEach((opt, idx) => {
+    let cls = "option-btn";
+    if (showFeedback) {
+      cls += " locked";
+      if (opt.correct) cls += " correct reveal-correct";
+      else if (idx === selected && !opt.correct) cls += " wrong";
+    }
+    optHtml += `<button class="${cls}" onclick="pick(${idx})"><span class="es">${opt.text}</span></button>`;
+  });
+
+  let fbHtml = "";
+  if (showFeedback && selected !== null) {
+    const isCorrect = shuffled[selected].correct;
+    fbHtml = `<div class="feedback ${isCorrect ? "good" : "hint"}">${isCorrect ? "✅ " : "💡 "}${shuffled[selected].feedback}</div>`;
+  }
+
+  let nextHtml = "";
+  if (showFeedback) {
+    const label = step < STEPS.length - 1 ? "Toliau →" : "Žiūrėti rezultatus →";
+    nextHtml = `<button class="next-btn" onclick="next()">${label}</button>`;
+  }
+
+  app.innerHTML = `
+    <div class="progress-bar">
+      <div class="progress-info"><span>Situacija ${step + 1} iš ${STEPS.length}</span><span>${score} ✓</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="card fade-in">
+      <div class="scene-bar">${c.scene}</div>
+      <div class="content">
+        <div class="waiter-bubble">
+          <div class="waiter-label">🧑‍🍳 PADAVĖJAS</div>
+          <div class="waiter-text">${c.waiter}</div>
+        </div>
+        <p class="instruction">${c.instruction}</p>
+        <p class="question">${c.question}</p>
+        ${optHtml}
+        ${fbHtml}
+        ${nextHtml}
+      </div>
+    </div>`;
+}
+
+function startGame() { step = 0; score = 0; selected = null; showFeedback = false; shuffled = shuffle(STEPS[0].options); render(); }
+function restart() { step = -1; score = 0; selected = null; showFeedback = false; render(); }
+
+function pick(idx) {
+  if (showFeedback) return;
+  selected = idx;
+  showFeedback = true;
+  if (shuffled[idx].correct) score++;
+  render();
+}
+
+function next() {
+  step++;
+  selected = null;
+  showFeedback = false;
+  if (step < STEPS.length) shuffled = shuffle(STEPS[step].options);
+  render();
+}
+
+render();
+</script>
+</body>
 </html>
